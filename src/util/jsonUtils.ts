@@ -1,3 +1,4 @@
 export function toJson(value: any, spacing: number = 2) {
-    return JSON.stringify(value, null, spacing)
+    // console.log(`In ${value}, out ${JSON.stringify(value)}`);
+    return JSON.parse(JSON.stringify(value, null, spacing));
 }

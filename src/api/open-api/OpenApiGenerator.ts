@@ -372,7 +372,7 @@ export class OpenApiGenerator {
         if (requestInfo.example) {
             this.logger.trace("Using user defined request example for endpoint: %s", endpointInfo.name)
 
-            mediaTypeObject.example = requestInfo.example
+            mediaTypeObject.example = JSON.parse(requestInfo.example)
         } else if (mediaTypeObject.schema) {
             let schema = mediaTypeObject.schema as SchemaObject
 
@@ -464,7 +464,7 @@ export class OpenApiGenerator {
             if (apiBodyInfo.example) {
                 this.logger.trace("Using user defined response example: %s", apiBodyInfo.example)
 
-                mediaTypeObject.example = apiBodyInfo.example
+                mediaTypeObject.example = JSON.parse(apiBodyInfo.example)
             } else if (mediaTypeObject.schema) {
                 let schema = mediaTypeObject.schema as SchemaObject
 

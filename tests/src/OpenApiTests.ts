@@ -195,7 +195,7 @@ export class OpenApiTests extends TestBase {
         Expect(headerParameter.name).toEqual("x-test-header")
         Expect(headerParameter.description).toEqual("test header param")
         Expect(schema).toEqual({
-            example: "\"a string\"",
+            example: "a string",
             type: "string"
         })
 
@@ -217,7 +217,7 @@ export class OpenApiTests extends TestBase {
             },
             "location": {
                 "type": "object",
-                "example": "{\n  \"city\": \"city\",\n  \"country\": \"country\",\n  \"localeCodes\": [\n    10,\n    20,\n    30\n  ]\n}",
+                "example": { "city": "city", "country": "country", "localeCodes": [10, 20, 30]},
                 "properties": {
                     "city": {
                         "type": "string",
@@ -229,7 +229,7 @@ export class OpenApiTests extends TestBase {
                     },
                     "localeCodes": {
                         "type": "array",
-                        "example": "[\n  10,\n  20,\n  30\n]",
+                        "example": [10, 20, 30],
                         "items": {
                             "type": "number",
                             "example": 10
@@ -239,7 +239,7 @@ export class OpenApiTests extends TestBase {
             },
             "roles": {
                 "type": "array",
-                "example": "[\n  \"role1\",\n  \"role2\",\n  \"roleN\"\n]",
+                "example": ["role1", "role2", "roleN"],
                 "items": {
                     "type": "string",
                     "example": "role1"
@@ -280,7 +280,7 @@ export class OpenApiTests extends TestBase {
         Expect(pathParameter.description).toEqual("test path param")
         Expect(pathParameter.required).toEqual(true)
         Expect(contentSchema).toEqual({
-            example: "\"a string\"",
+            example: "a string",
             type: "string"
         })
     }
@@ -309,7 +309,7 @@ export class OpenApiTests extends TestBase {
         Expect(queryParameter.name).toEqual("queryTest")
         Expect(queryParameter.description).toEqual("test query param")
         Expect(schema).toEqual({
-            example: "1",
+            example: 1,
             type: "number"
         })
 
@@ -365,24 +365,24 @@ export class OpenApiTests extends TestBase {
         let request = endpoint.requestBody as RequestBodyObject
         let requestContent: MediaTypeObject = request.content["application/json"]
 
-        Expect(requestContent.example).toBe(`{
-  "name": "name",
-  "age": 18,
-  "location": {
-    "city": "city",
-    "country": "country",
-    "localeCodes": [
-      10,
-      20,
-      30
-    ]
-  },
-  "roles": [
-    "role1",
-    "role2",
-    "roleN"
-  ]
-}`)
+        Expect(requestContent.example).toEqual({
+          "name": "name",
+          "age": 18,
+          "location": {
+            "city": "city",
+            "country": "country",
+            "localeCodes": [
+              10,
+              20,
+              30
+            ]
+          },
+          "roles": [
+            "role1",
+            "role2",
+            "roleN"
+          ]
+        })
     }
 
     @TestCase("json")
@@ -406,7 +406,7 @@ export class OpenApiTests extends TestBase {
             },
             "location": {
                 "type": "object",
-                "example": "{\n  \"city\": \"city\",\n  \"country\": \"country\",\n  \"localeCodes\": [\n    10,\n    20,\n    30\n  ]\n}",
+                "example": { "city": "city", "country": "country", "localeCodes": [10, 20, 30]},
                 "properties": {
                     "city": {
                         "type": "string",
@@ -418,7 +418,7 @@ export class OpenApiTests extends TestBase {
                     },
                     "localeCodes": {
                         "type": "array",
-                        "example": "[\n  10,\n  20,\n  30\n]",
+                        "example": [10, 20, 30],
                         "items": {
                             "type": "number",
                             "example": 10
@@ -428,7 +428,7 @@ export class OpenApiTests extends TestBase {
             },
             "roles": {
                 "type": "array",
-                "example": "[\n  \"role1\",\n  \"role2\",\n  \"roleN\"\n]",
+                "example": [ "role1", "role2", "roleN"],
                 "items": {
                     "type": "string",
                     "example": "role1"
@@ -445,7 +445,7 @@ export class OpenApiTests extends TestBase {
         let request = endpoint.requestBody as RequestBodyObject
         let requestContent: MediaTypeObject = request.content["text/plain"]
 
-        Expect(requestContent.example).toBe(`"a string"`)
+        Expect(requestContent.example).toBe(`a string`)
     }
 
     @TestCase("json")
@@ -458,7 +458,7 @@ export class OpenApiTests extends TestBase {
         let schema: SchemaObject = requestContent.schema
 
         Expect(schema.type).toEqual("string")
-        Expect(schema.example).toEqual(`"a string"`)
+        Expect(schema.example).toEqual(`a string`)
     }
 
     @TestCase("json")
@@ -469,7 +469,7 @@ export class OpenApiTests extends TestBase {
         let request = endpoint.requestBody as RequestBodyObject
         let content: MediaTypeObject = request.content["application/json"]
 
-        Expect(content.example).toEqual(`{"name": "some name", "age": 22}`)
+        Expect(content.example).toEqual({"name": "some name", "age": 22})
     }
 
     @TestCase("json")
@@ -543,32 +543,32 @@ export class OpenApiTests extends TestBase {
         let response_201: ResponseObject = endpoint.responses["201"]
         let content_201: MediaTypeObject = response_201.content["application/json"]
 
-        Expect(content_201.example).toBe(`{
-  "name": "name",
-  "age": 18,
-  "location": {
-    "city": "city",
-    "country": "country",
-    "localeCodes": [
-      10,
-      20,
-      30
-    ]
-  },
-  "roles": [
-    "role1",
-    "role2",
-    "roleN"
-  ]
-}`)
+        Expect(content_201.example).toEqual({
+          "name": "name",
+          "age": 18,
+          "location": {
+            "city": "city",
+            "country": "country",
+            "localeCodes": [
+              10,
+              20,
+              30
+            ]
+          },
+          "roles": [
+            "role1",
+            "role2",
+            "roleN"
+          ]
+        })
 
     let response_400: ResponseObject = endpoint.responses["400"]
     let content_400: MediaTypeObject = response_400.content["application/json"]
 
-    Expect(content_400.example).toBe(`{
-  "statusCode": 500,
-  "error": "error description"
-}`)
+    Expect(content_400.example).toEqual({
+        "statusCode": 500,
+        "error": "error description"
+      })
     }
 
     @TestCase("json")
@@ -592,7 +592,7 @@ export class OpenApiTests extends TestBase {
             },
             "location": {
                 "type": "object",
-                "example": "{\n  \"city\": \"city\",\n  \"country\": \"country\",\n  \"localeCodes\": [\n    10,\n    20,\n    30\n  ]\n}",
+                "example": { "city": "city", "country": "country", "localeCodes": [10, 20, 30]},
                 "properties": {
                     "city": {
                         "type": "string",
@@ -604,7 +604,7 @@ export class OpenApiTests extends TestBase {
                     },
                     "localeCodes": {
                         "type": "array",
-                        "example": "[\n  10,\n  20,\n  30\n]",
+                        "example": [10, 20, 30],
                         "items": {
                             "type": "number",
                             "example": 10
@@ -614,7 +614,7 @@ export class OpenApiTests extends TestBase {
             },
             "roles": {
                 "type": "array",
-                "example": "[\n  \"role1\",\n  \"role2\",\n  \"roleN\"\n]",
+                "example": ["role1", "role2", "roleN"],
                 "items": {
                     "type": "string",
                     "example": "role1"
@@ -647,7 +647,7 @@ export class OpenApiTests extends TestBase {
         let response: ResponseObject = endpoint.responses["200"]
         let content: MediaTypeObject = response.content["application/json"]
 
-        Expect(content.example).toBe(`"a string"`)
+        Expect(content.example).toBe(`a string`)
     }
 
     @TestCase("json")
@@ -660,7 +660,7 @@ export class OpenApiTests extends TestBase {
         let schema: SchemaObject = content.schema
 
         Expect(schema.type).toEqual("string")
-        Expect(schema.example).toEqual(`"a string"`)
+        Expect(schema.example).toEqual(`a string`)
     }
 
     @TestCase("json")
@@ -687,16 +687,16 @@ export class OpenApiTests extends TestBase {
         let content: MediaTypeObject = response.content["application/json"]
         let schema: SchemaObject = content.schema
 
-        Expect(content.example).toEqual(`[
-  "a",
-  "b"
-]`)
+        Expect(content.example).toEqual([
+          "a",
+          "b"
+        ])
 
         Expect(schema.type).toEqual("array")
-        Expect(schema.example).toEqual(`[
-  "a",
-  "b"
-]`)
+        Expect(schema.example).toEqual([
+          "a",
+          "b"
+        ])
 
         let itemSchema = schema.items as SchemaObject
 
@@ -712,12 +712,12 @@ export class OpenApiTests extends TestBase {
         let response_201: ResponseObject = endpoint.responses["201"]
         let content_201: MediaTypeObject = response_201.content["application/json"]
 
-        Expect(content_201.example).toEqual(`{"name": "another name", "age": 30}`)
+        Expect(content_201.example).toEqual({"name": "another name", "age": 30})
 
         let response_400: ResponseObject = endpoint.responses["400"]
         let content_400: MediaTypeObject = response_400.content["application/json"]
 
-        Expect(content_400.example).toEqual(`{"statusCode": 400, "error": "you screwed up"}`)
+        Expect(content_400.example).toEqual({"statusCode": 400, "error": "you screwed up"})
     }
 
     @TestCase("json")
@@ -830,7 +830,7 @@ export class OpenApiTests extends TestBase {
             },
             "field3": {
                 "type": "array",
-                "example": "[\n  1,\n  2,\n  3\n]",
+                "example": [ 1, 2, 3],
                 "items": {
                     "type": "number",
                     "example": 1
@@ -856,7 +856,7 @@ export class OpenApiTests extends TestBase {
         Expect(arrayOfObjectsSchema.type).toEqual("array")
         Expect(arrayOfObjectsSchema.items).toEqual({
             "type": "array",
-            "example": "[\n  \"a\",\n  \"b\",\n  \"c\"\n]",
+            "example": ["a", "b", "c"],
             "items": {
                 "type": "string",
                 "example": "a"
@@ -874,11 +874,11 @@ export class OpenApiTests extends TestBase {
         let schema = content.schema as SchemaObject
 
         Expect(schema.type).toEqual("array")
-        Expect(schema.example).toEqual(`[
-  {},
-  {},
-  {}
-]`)
+        Expect(schema.example).toEqual([
+          {},
+          {},
+          {}
+        ])
 
         let arrayItemsSchema = schema.items as SchemaObject
 
@@ -897,84 +897,84 @@ export class OpenApiTests extends TestBase {
 
         Expect(schema.type).toEqual("array")
 
-        Expect(schema.example).toEqual(`[
-  {
-    "name": "name",
-    "age": 18,
-    "location": {
-      "city": "city",
-      "country": "country",
-      "localeCodes": [
-        10,
-        20,
-        30
-      ]
-    },
-    "roles": [
-      "role1",
-      "role2",
-      "roleN"
-    ]
-  },
-  {
-    "name": "name",
-    "age": 18,
-    "location": {
-      "city": "city",
-      "country": "country",
-      "localeCodes": [
-        10,
-        20,
-        30
-      ]
-    },
-    "roles": [
-      "role1",
-      "role2",
-      "roleN"
-    ]
-  },
-  {
-    "name": "name",
-    "age": 18,
-    "location": {
-      "city": "city",
-      "country": "country",
-      "localeCodes": [
-        10,
-        20,
-        30
-      ]
-    },
-    "roles": [
-      "role1",
-      "role2",
-      "roleN"
-    ]
-  }
-]`)
+        Expect(schema.example).toEqual([
+          {
+            "name": "name",
+            "age": 18,
+            "location": {
+              "city": "city",
+              "country": "country",
+              "localeCodes": [
+                10,
+                20,
+                30
+              ]
+            },
+            "roles": [
+              "role1",
+              "role2",
+              "roleN"
+            ]
+          },
+          {
+            "name": "name",
+            "age": 18,
+            "location": {
+              "city": "city",
+              "country": "country",
+              "localeCodes": [
+                10,
+                20,
+                30
+              ]
+            },
+            "roles": [
+              "role1",
+              "role2",
+              "roleN"
+            ]
+          },
+          {
+            "name": "name",
+            "age": 18,
+            "location": {
+              "city": "city",
+              "country": "country",
+              "localeCodes": [
+                10,
+                20,
+                30
+              ]
+            },
+            "roles": [
+              "role1",
+              "role2",
+              "roleN"
+            ]
+          }
+        ])
 
         let arrayItemsSchema = schema.items as SchemaObject
 
         Expect(arrayItemsSchema.type).toEqual("object")
-        Expect(arrayItemsSchema.example).toEqual(`{
-  "name": "name",
-  "age": 18,
-  "location": {
-    "city": "city",
-    "country": "country",
-    "localeCodes": [
-      10,
-      20,
-      30
-    ]
-  },
-  "roles": [
-    "role1",
-    "role2",
-    "roleN"
-  ]
-}`)
+        Expect(arrayItemsSchema.example).toEqual({
+          "name": "name",
+          "age": 18,
+          "location": {
+            "city": "city",
+            "country": "country",
+            "localeCodes": [
+              10,
+              20,
+              30
+            ]
+          },
+          "roles": [
+            "role1",
+            "role2",
+            "roleN"
+          ]
+        })
         Expect(arrayItemsSchema.properties).toEqual({
             "name": {
                 "type": "string",
@@ -986,7 +986,7 @@ export class OpenApiTests extends TestBase {
             },
             "location": {
                 "type": "object",
-                "example": "{\n  \"city\": \"city\",\n  \"country\": \"country\",\n  \"localeCodes\": [\n    10,\n    20,\n    30\n  ]\n}",
+                "example": {  "city": "city", "country": "country",  "localeCodes": [ 10, 20, 30 ]},
                 "properties": {
                     "city": {
                         "type": "string",
@@ -998,7 +998,7 @@ export class OpenApiTests extends TestBase {
                     },
                     "localeCodes": {
                         "type": "array",
-                        "example": "[\n  10,\n  20,\n  30\n]",
+                        "example": [10, 20, 30],
                         "items": {
                             "type": "number",
                             "example": 10
@@ -1008,7 +1008,7 @@ export class OpenApiTests extends TestBase {
             },
             "roles": {
                 "type": "array",
-                "example": "[\n  \"role1\",\n  \"role2\",\n  \"roleN\"\n]",
+                "example": ["role1", "role2", "roleN"],
                 "items": {
                     "type": "string",
                     "example": "role1"
