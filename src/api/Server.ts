@@ -134,7 +134,8 @@ export class Server {
             c => this.appContainer.get(c),
             ei => this.appContainer.get(ei),
             this._middlewareRegistry,
-            this.logFactory
+            this.logFactory,
+            this.appConfig
         )
 
         apiEndpoint.register(this.api)

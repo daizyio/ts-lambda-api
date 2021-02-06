@@ -12,6 +12,7 @@ export class EndpointInfo {
     public readonly parameterExtractors: IParameterExtractor[]
     public httpMethod: string
     public path?: string
+    public versions?: string[]
     public consumes?: string
     public produces?: string
     public noAuth?: boolean
@@ -23,7 +24,6 @@ export class EndpointInfo {
     public get fullPath() {
         let rootPath = this.getControllerPropOrDefault(c => c.path) || ""
         let endpointPath = this.path || ""
-
         return `${rootPath}${endpointPath}`
     }
 

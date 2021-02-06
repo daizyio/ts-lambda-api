@@ -12,6 +12,9 @@ import { LogFactory } from "../util/logging/LogFactory"
 import { Controller } from "./Controller"
 import { ErrorInterceptor } from "./error/ErrorInterceptor"
 import { MiddlewareRegistry } from "./MiddlewareRegistry"
+import { AppConfig } from '../model/AppConfig'
+
+import semver from 'semver';
 
 export type ControllerFactory = (constructor: Function) => Controller
 export type ErrorInterceptorFactory = (type: interfaces.ServiceIdentifier<ErrorInterceptor>) => ErrorInterceptor
@@ -29,13 +32,15 @@ export class Endpoint {
      * @param errorInteceptorFactory Function used to build error interceptors, for use with InversifyJS.
      * @param middlewareRegistry Server middleware registry for authentication, authorisation and error interceptors.
      * @param logFactory Initialised log factory.
+     * @param appConfig application configuration
      */
     public constructor(
         private readonly endpointInfo: EndpointInfo,
         private readonly controllerFactory: ControllerFactory,
         private readonly errorInteceptorFactory: ErrorInterceptorFactory,
         private readonly middlewareRegistry: MiddlewareRegistry,
-        private readonly logFactory: LogFactory
+        private readonly logFactory: LogFactory,
+        private readonly appConfig: AppConfig
     ) {
         this.logger = logFactory.getLogger(Endpoint)
         this.endpointSummary = `[${endpointInfo.httpMethod}] ${endpointInfo.fullPath}`
@@ -49,34 +54,36 @@ export class Endpoint {
     public register(api: API) {
         let registerMethod = this.mapHttpMethodToCall(api, this.endpointInfo.httpMethod)
 
-        this.log(LogLevel.debug, "Registering endpoint")
+        for (const version of this.getMatchingVersions(this.endpointInfo.versions || this.endpointInfo.controller.versions)) {
+          this.log(LogLevel.debug, "Registering endpoint %s => %s", `${version}${this.endpointInfo.fullPath}`, `${this.endpointInfo.controller.name}::${this.endpointInfo.methodName}`)
 
-        registerMethod(
-            this.endpointInfo.fullPath,
-            async (req, res) => {
-                try {
-                    if (this.logger.traceEnabled()) {
-                        this.log(LogLevel.trace, "Endpoint request:\n%s", inspect(req))
-                    }
+          registerMethod(
+              `${version}${this.endpointInfo.fullPath}`,
+              async (req, res) => {
+                  try {
+                      if (this.logger.traceEnabled()) {
+                          this.log(LogLevel.trace, "Endpoint request:\n%s", inspect(req))
+                      }
 
-                    let returnValue = await this.invoke(req, res)
+                      let returnValue = await this.invoke(req, res)
 
-                    this.log(LogLevel.info, "Endpoint invoked successfully, returning response")
+                      this.log(LogLevel.info, "Endpoint invoked successfully, returning response")
 
-                    this.log(LogLevel.trace, "Endpoint return value: %j", returnValue)
+                      this.log(LogLevel.trace, "Endpoint return value: %j", returnValue)
 
-                    if (this.logger.traceEnabled()) {
-                        this.log(LogLevel.trace, "Endpoint '%s' response:\n%s", inspect(res))
-                    }
+                      if (this.logger.traceEnabled()) {
+                          this.log(LogLevel.trace, "Endpoint '%s' response:\n%s", inspect(res))
+                      }
 
-                    return returnValue
-                } catch (ex) {
-                    this.logError("Error processing endpoint request", ex)
+                      return returnValue
+                  } catch (ex) {
+                      this.logError("Error processing endpoint request", ex)
 
-                    throw ex
-                }
-            }
-        )
+                      throw ex
+                  }
+              }
+          )
+        }
     }
 
     private log(logLevel: LogLevel, message: string, ...formatArgs: any[]) {
@@ -452,4 +459,28 @@ export class Endpoint {
                 )
             )
     }
+
+    private getMatchingVersions(versions: string[]): string[] {
+      if (!versions || versions.length == 0) {
+        versions = ['']
+      }
+
+      const endpointRange = new semver.Range(versions.join('||')).range;
+
+      if (!this.appConfig.versions || this.appConfig.versions.length == 0) {
+        this.logger.warn("%s::%s specifies a version (%s) but no versions found in application configuration. Will use exact values", this.endpointInfo.controller.name, this.endpointInfo.methodName, versions);
+        return versions;
+      }
+
+      const semverCandidates = this.appConfig.versions.map(p => ({ original: p, clean: semver.coerce(p).version }))
+
+      const matchingVersions = semverCandidates.filter(v => semver.satisfies(v.clean, endpointRange)).map(v => v.original)
+
+      if (matchingVersions.length == 0) {
+        this.logger.warn("%s::%s versions (%s) do not match any possible versions from application configuration", this.endpointInfo.controller.name, this.endpointInfo.methodName, versions);
+      }
+
+      return matchingVersions;
+    }
+
 }

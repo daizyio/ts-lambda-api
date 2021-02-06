@@ -8,9 +8,9 @@ import { DecoratorRegistry } from "../reflection/DecoratorRegistry"
  *             class using a `apiController` decorator. This URL can contain path parameters,
  *             prefixed with a colon (':') character.
  */
-export function GET(path: string = "") {
+export function GET(path: string = "", options?: { versions: string[] }) {
     return (classDefinition: Object, methodName: string) =>
-        registerApiEndpoint(classDefinition, methodName, path, "GET")
+        registerApiEndpoint(classDefinition, methodName, path, "GET", options?.versions)
 }
 
 /**
@@ -21,9 +21,9 @@ export function GET(path: string = "") {
  *             the class using a `apiController` decorator. This URL can contain path parameters,
  *             prefixed with a colon (':') character.
  */
-export function POST(path: string = "") {
+export function POST(path: string = "", options?: { versions: string[] }) {
     return (classDefinition: Object, methodName: string) =>
-        registerApiEndpoint(classDefinition, methodName, path, "POST")
+        registerApiEndpoint(classDefinition, methodName, path, "POST", options?.versions)
 }
 
 /**
@@ -34,9 +34,9 @@ export function POST(path: string = "") {
  *             the class using a `apiController` decorator. This URL can contain path parameters,
  *             prefixed with a colon (':') character.
  */
-export function PUT(path: string = "") {
+export function PUT(path: string = "", options?: { versions: string[] }) {
     return (classDefinition: Object, methodName: string) =>
-        registerApiEndpoint(classDefinition, methodName, path, "PUT")
+        registerApiEndpoint(classDefinition, methodName, path, "PUT", options?.versions)
 }
 
 /**
@@ -47,9 +47,9 @@ export function PUT(path: string = "") {
  *             the class using a `apiController` decorator. This URL can contain path parameters,
  *             prefixed with a colon (':') character.
  */
-export function DELETE(path: string = "") {
+export function DELETE(path: string = "", options?: { versions: string[] }) {
     return (classDefinition: Object, methodName: string) =>
-        registerApiEndpoint(classDefinition, methodName, path, "DELETE")
+        registerApiEndpoint(classDefinition, methodName, path, "DELETE", options?.versions)
 }
 
 /**
@@ -60,13 +60,14 @@ export function DELETE(path: string = "") {
  *             the class using a `apiController` decorator. This URL can contain path parameters,
  *             prefixed with a colon (':') character.
  */
-export function PATCH(path: string = "") {
+export function PATCH(path: string = "", options?: { versions: string[] }) {
     return (classDefinition: Object, methodName: string) =>
-        registerApiEndpoint(classDefinition, methodName, path, "PATCH")
+        registerApiEndpoint(classDefinition, methodName, path, "PATCH", options?.versions)
 }
 
-function registerApiEndpoint(classDefinition: Object, methodName: string, path: string, httpMethod: string) {
+function registerApiEndpoint(classDefinition: Object, methodName: string, path: string, httpMethod: string, versions?: string[]) {
     let controller = DecoratorRegistry.getOrCreateController(classDefinition.constructor)
+
     let endpoint = DecoratorRegistry.getOrCreateEndpoint(controller, methodName)
 
     DecoratorRegistry.getLogger().debug("@%s(%s) decorator executed for endpoint: %s",
@@ -76,4 +77,6 @@ function registerApiEndpoint(classDefinition: Object, methodName: string, path: 
 
     endpoint.httpMethod = httpMethod
     endpoint.path = path
+
+    endpoint.versions = versions;
 }

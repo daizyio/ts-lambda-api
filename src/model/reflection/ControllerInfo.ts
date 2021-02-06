@@ -12,6 +12,7 @@ export class ControllerInfo {
     public apiDescription?: string
     public apiIgnore?: boolean
     public path?: string
+    public versions?: string[]
     public consumes?: string
     public apiRequestInfo?: ApiBodyInfo
     public produces?: string

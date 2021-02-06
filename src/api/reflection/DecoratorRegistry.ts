@@ -37,9 +37,9 @@ export class DecoratorRegistry {
         let endpointKey = `${controller.name}::${methodName}`
 
         if (!DecoratorRegistry.Endpoints[endpointKey]) {
-            DecoratorRegistry.logger.debug("Endpoint registered: %s", endpointKey)
+          DecoratorRegistry.logger.debug("Endpoint registered: %s", endpointKey)
 
-            DecoratorRegistry.Endpoints[endpointKey] = new EndpointInfo(endpointKey, controller, methodName)
+          DecoratorRegistry.Endpoints[endpointKey] = new EndpointInfo(endpointKey, controller, methodName)
         }
 
         controller.endpoints[methodName] = DecoratorRegistry.Endpoints[endpointKey]
