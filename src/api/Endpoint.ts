@@ -54,8 +54,8 @@ export class Endpoint {
     public register(api: API) {
         let registerMethod = this.mapHttpMethodToCall(api, this.endpointInfo.httpMethod)
 
-        for (const version of this.getMatchingVersions(this.endpointInfo.versions || this.endpointInfo.controller.versions)) {
-          this.log(LogLevel.debug, "Registering endpoint %s => %s", `${version}${this.endpointInfo.fullPath}`, `${this.endpointInfo.controller.name}::${this.endpointInfo.methodName}`)
+        for (const version of this.getMatchingVersions(this.endpointInfo.versions || this.endpointInfo.controller?.versions)) {
+          this.log(LogLevel.debug, "Registering endpoint %s => %s", `${version}${this.endpointInfo.fullPath}`, `${this.endpointInfo.controller?.name}::${this.endpointInfo.methodName}`)
 
           registerMethod(
               `${version}${this.endpointInfo.fullPath}`,
