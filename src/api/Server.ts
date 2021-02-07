@@ -1,5 +1,6 @@
 import createAPI, { API } from "lambda-api"
 import { Container } from "inversify"
+import semver from "semver"
 
 import { ApiRequest } from "../model/ApiRequest"
 import { ApiResponse } from "../model/ApiResponse"
@@ -115,9 +116,13 @@ export class Server {
     }
 
     private registerOpenApiEndpoint(format: OpenApiFormat) {
+      if (!this.appConfig.versions) {
+        this.appConfig.versions = [''];
+      }
+      for (const version of this.appConfig.versions) {
         let specEndpoint = new EndpointInfo(
-            `internal__openapi::${format}`,
-            async () => await this.openApiGenerator.exportOpenApiSpec(format)
+            `internal__openapi::${format}::${version}`,
+            async () => await this.openApiGenerator.exportOpenApiSpec(format, version)
         )
 
         specEndpoint.path = `/open-api.${format}`
@@ -125,7 +130,9 @@ export class Server {
         specEndpoint.noAuth = !this.appConfig.openApi.useAuthentication
         specEndpoint.produces = `application/${format}`
 
+        specEndpoint.versions = [semver.coerce(version)?.version]
         this.registerEndpoint(specEndpoint)
+      }
     }
 
     private registerEndpoint(endpointInfo: EndpointInfo) {

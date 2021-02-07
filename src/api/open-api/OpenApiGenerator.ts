@@ -11,6 +11,7 @@ import {
     SchemaObject,
     TagObject
 } from "openapi3-ts/dist/model"
+import semver from "semver";
 
 import { MiddlewareRegistry } from "../MiddlewareRegistry"
 import { DecoratorRegistry } from "../reflection/DecoratorRegistry"
@@ -25,6 +26,7 @@ import { toJson } from "../../util/jsonUtils"
 import { timed } from "../../util/timed"
 import { ILogger } from "../../util/logging/ILogger"
 import { LogFactory } from "../../util/logging/LogFactory"
+import { isNullOrUndefined } from 'util'
 
 export type OpenApiFormat = "json" | "yml"
 
@@ -107,17 +109,11 @@ export class OpenApiGenerator {
     }
 
     @timed
-    public buildOpenApiSpec() {
-        this.logger.debug("Building raw OpenAPI spec")
-
-        return this.generateApiOpenApiSpecBuilder(this.appConfig, this.middlewareRegistry).getSpec()
-    }
-
-    @timed
     public async exportOpenApiSpec(
-        format: OpenApiFormat = "json"
+        format: OpenApiFormat = "json",
+        version: string
     ) {
-        let openApiBuilder = this.generateApiOpenApiSpecBuilder(this.appConfig, this.middlewareRegistry)
+        let openApiBuilder = this.generateApiOpenApiSpecBuilder(this.appConfig, this.middlewareRegistry, version)
 
         if (format === "json") {
             this.logger.debug("Exporting OpenAPI spec as JSON")
@@ -139,12 +135,12 @@ export class OpenApiGenerator {
         }
     }
 
-    private generateApiOpenApiSpecBuilder(appConfig: AppConfig, middlewareRegistry: MiddlewareRegistry) {
+    private generateApiOpenApiSpecBuilder(appConfig: AppConfig, middlewareRegistry: MiddlewareRegistry, version?: string) {
         let openApiBuilder = OpenApiBuilder.create()
         let paths: IDictionary<PathItemObject> = {}
         let tags: IDictionary<TagObject> = {}
 
-        this.logger.debug("Generating OpenAPI spec")
+        this.logger.debug("Generating OpenAPI spec for %s ", version);
 
         if (appConfig.name) {
             this.logger.trace("title: %s", appConfig.name)
@@ -152,23 +148,23 @@ export class OpenApiGenerator {
             openApiBuilder.addTitle(appConfig.name)
         }
 
-        if (appConfig.version) {
-            this.logger.trace("version: %s", appConfig.version)
+        if (appConfig.version || version) {
+            this.logger.trace("version: %s", version)
 
-            openApiBuilder.addVersion(appConfig.version)
+            openApiBuilder.addVersion(appConfig.version || version)
         }
 
         if (appConfig.base) {
             this.logger.trace("base URL: %s", appConfig.base)
 
             openApiBuilder.addServer({
-                url: appConfig.base
+                url: `${appConfig.base}${version ? `/${version}` : ''}`
             })
         }
 
         this.discoverSecuritySchemes(openApiBuilder, middlewareRegistry)
 
-        this.discoverTagsAndPaths(paths, tags)
+        this.discoverTagsAndPaths(paths, tags, version)
 
         // add all discovered tags
         for (let tag in tags) {
@@ -215,7 +211,9 @@ export class OpenApiGenerator {
         }
     }
 
-    private discoverTagsAndPaths(paths: IDictionary<PathItemObject>, tags: IDictionary<TagObject>) {
+    private discoverTagsAndPaths(paths: IDictionary<PathItemObject>, tags: IDictionary<TagObject>, version: string) {
+        const versionedPaths: IDictionary<VersionedPathItemObject> = {};
+
         for (let endpoint in OpenApiGenerator.ENDPOINTS) {
             if (!OpenApiGenerator.ENDPOINTS.hasOwnProperty(endpoint)) {
                 continue
@@ -223,7 +221,7 @@ export class OpenApiGenerator {
 
             let endpointInfo = OpenApiGenerator.ENDPOINTS[endpoint]
 
-            if (endpointInfo.apiIgnore || (endpointInfo.controller && endpointInfo.controller.apiIgnore)) {
+            if (endpointInfo.apiIgnore || (endpointInfo.controller && endpointInfo.controller.apiIgnore) || endpointInfo.getMatchingVersions([version]).length === 0) {
                 continue
             }
 
@@ -231,7 +229,15 @@ export class OpenApiGenerator {
                 this.addTagIfPresent(tags, endpointInfo.controller)
             }
 
-            this.addEndpoint(paths, endpointInfo)
+            this.addEndpoint(versionedPaths, endpointInfo)
+        }
+
+        for (const path in versionedPaths) {
+          if (!versionedPaths.hasOwnProperty(path)) {
+            continue
+          }
+
+          paths[path] = versionedPaths[path].pathItem;
         }
     }
 
@@ -250,9 +256,11 @@ export class OpenApiGenerator {
     }
 
     private addEndpoint(
-        paths: IDictionary<PathItemObject>,
+        paths: IDictionary<VersionedPathItemObject>,
         endpointInfo: EndpointInfo
     ) {
+        this.logger.debug("Adding path for endpoint: %s", endpointInfo.name)
+
         let path = endpointInfo.fullPath
 
         if (path.length > 1 && path.endsWith("/")) {
@@ -261,14 +269,26 @@ export class OpenApiGenerator {
         }
 
         // replace :param with {param} to match OpenAPI spec
-        path = path.replace(/:([^\/]*)(\/?)/g, "{$1}$2");
-        let pathInfo: PathItemObject = paths[path] || {}
+        path = path.replace(/:([^\/]*)(\/?)/g, "{$1}$2")
+
+        const minVersion = semver.minVersion(endpointInfo.getVersionRange())
+
+        if (paths[path]) {
+          this.logger.debug("Already have an endpoint registered for %s", path)
+          // if there's already a path registered, keep it if it's mininum version is greater than the new entry
+          const existingMinVersion = paths[path].minVersion;
+
+          if (semver.gt(existingMinVersion, minVersion)) {
+            this.logger.debug("Existing endpoint has a greater minVersion (%s), ignoring this one (%s)", existingMinVersion, minVersion)
+            return
+          }
+        }
+
+        let pathInfo: PathItemObject = paths[path] ? paths[path].pathItem : {}
         let endpointMethod = endpointInfo.httpMethod.toLowerCase()
         let endpointOperation: OperationObject = {
             responses: {}
         }
-
-        this.logger.trace("Adding path for endpoint: %s", endpointInfo.name)
 
         if (endpointMethod !== "get" && endpointMethod !== "delete") {
             this.setRequestInfo(endpointOperation, endpointInfo)
@@ -317,7 +337,8 @@ export class OpenApiGenerator {
         }
 
         pathInfo[endpointMethod] = endpointOperation
-        paths[path] = pathInfo
+
+        paths[path] = { pathItem: pathInfo, minVersion }
     }
 
     private setRequestInfo(endpointOperation: OperationObject, endpointInfo: EndpointInfo) {
@@ -869,4 +890,9 @@ export class OpenApiGenerator {
 
         paramInfo.style = apiParamInfo.style
     }
+}
+
+export interface VersionedPathItemObject {
+  pathItem: PathItemObject,
+  minVersion: string
 }

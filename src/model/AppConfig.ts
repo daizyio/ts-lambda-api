@@ -27,7 +27,7 @@ export class AppConfig implements Options {
      */
     public version?: string
 
-    public versions?: string[]
+    public versions?: string[] = ['']
 
     /**
      * Base path for all routes, e.g. base: 'v1' would

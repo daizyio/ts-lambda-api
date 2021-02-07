@@ -1,4 +1,5 @@
 import { interfaces } from "inversify/dts/interfaces/interfaces"
+import semver from "semver";
 
 import { ControllerInfo } from "./ControllerInfo"
 import { ErrorInterceptor } from "../../api/error/ErrorInterceptor"
@@ -101,5 +102,24 @@ export class EndpointInfo {
         }
 
         return this.apiOperationInfo
+    }
+
+    public getVersionRange(): semver.Range {
+      const versions = this.versions || this.controller?.versions || ['x.x.x']
+      return new semver.Range(versions.join('||'));
+    }
+
+    public getMatchingVersions(allVersions: string[]): string[] {
+      if (!allVersions || allVersions.length === 0 || allVersions[0] === '') {
+        return allVersions;
+      }
+
+      const endpointRange = this.getVersionRange().range;
+
+      const semverCandidates = allVersions.map(p => ({ original: p, clean: semver.coerce(p)?.version }))
+
+      const matchingVersions = semverCandidates.filter(v => semver.satisfies(v.clean, endpointRange)).map(v => v.original)
+
+      return matchingVersions;
     }
 }

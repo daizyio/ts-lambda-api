@@ -14,8 +14,6 @@ import { ErrorInterceptor } from "./error/ErrorInterceptor"
 import { MiddlewareRegistry } from "./MiddlewareRegistry"
 import { AppConfig } from '../model/AppConfig'
 
-import semver from 'semver';
-
 export type ControllerFactory = (constructor: Function) => Controller
 export type ErrorInterceptorFactory = (type: interfaces.ServiceIdentifier<ErrorInterceptor>) => ErrorInterceptor
 
@@ -54,11 +52,11 @@ export class Endpoint {
     public register(api: API) {
         let registerMethod = this.mapHttpMethodToCall(api, this.endpointInfo.httpMethod)
 
-        for (const version of this.getMatchingVersions(this.endpointInfo.versions || this.endpointInfo.controller?.versions)) {
-          this.log(LogLevel.debug, "Registering endpoint %s => %s", `${version}${this.endpointInfo.fullPath}`, `${this.endpointInfo.controller?.name}::${this.endpointInfo.methodName}`)
+        for (const version of this.endpointInfo.getMatchingVersions(this.appConfig.versions)) {
+          this.log(LogLevel.debug, "Registering endpoint %s => %s", `${version}/${this.endpointInfo.fullPath}`, `${this.endpointInfo.controller?.name}::${this.endpointInfo.methodName}`)
 
           registerMethod(
-              `${version}${this.endpointInfo.fullPath}`,
+              `${version}/${this.endpointInfo.fullPath}`,
               async (req, res) => {
                   try {
                       if (this.logger.traceEnabled()) {
@@ -459,28 +457,4 @@ export class Endpoint {
                 )
             )
     }
-
-    private getMatchingVersions(versions: string[]): string[] {
-      if (!versions || versions.length == 0) {
-        versions = ['']
-      }
-
-      const endpointRange = new semver.Range(versions.join('||')).range;
-
-      if (!this.appConfig.versions || this.appConfig.versions.length == 0) {
-        this.logger.warn("%s::%s specifies a version (%s) but no versions found in application configuration. Will use exact values", this.endpointInfo.controller.name, this.endpointInfo.methodName, versions);
-        return versions;
-      }
-
-      const semverCandidates = this.appConfig.versions.map(p => ({ original: p, clean: semver.coerce(p).version }))
-
-      const matchingVersions = semverCandidates.filter(v => semver.satisfies(v.clean, endpointRange)).map(v => v.original)
-
-      if (matchingVersions.length == 0) {
-        this.logger.warn("%s::%s versions (%s) do not match any possible versions from application configuration", this.endpointInfo.controller.name, this.endpointInfo.methodName, versions);
-      }
-
-      return matchingVersions;
-    }
-
 }

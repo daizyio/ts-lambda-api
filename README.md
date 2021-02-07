@@ -38,6 +38,7 @@ This project is built on top of the wonderful [lambda-api](https://github.com/je
     - [Controller Routes](#controller-routes)
     - [Endpoint Routes](#endpoint-routes)
     - [Path Parameters](#path-params)
+    - [Route Versioning](#route-versioning)
     - [Manually Loading Controllers](#loading-controllers)
 - [Request Parameter Binding](#request-binding)
 - [Responses](#responses)
@@ -334,6 +335,56 @@ export class StoreController {
 ```
 
 **Note all path parameters are passed in as strings, you will need to cast these if required**
+
+---
+
+### <a id="route-versioning"></a>Route Versioning
+
+If you wish to have multiple versions of your endpoints, specify all available `versions` in your application configuration
+
+```typescript
+import { Container } from 'inversify';
+import { ApiLambdaApp, ApiRequest, AppConfig } from 'ts-lambda-api';
+import { AppController } from './controllers/AppController';
+
+const appConfig = new AppConfig();
+appConfig.base = '/api';
+appConfig.versions = ["v1.0", "v2.0"];
+```
+
+Specify application versions in your controller or endpoint routes - versions on a specific endpoint will override any versions 
+specified at the controller level. You may use [semver](https://devhints.io/semver) syntax to specify a range, including a `v` 
+if desired, although it is ignored, Routes will contain the version string exactly as specified in your `appConfig.versions`.
+
+```typescript
+import { injectable } from "inversify"
+
+import { apiController, pathParam, GET } from "ts-lambda-api"
+
+@apiController("/store/:storeId", { versions: ["v2.0"] })
+@injectable()
+export class StoreController {
+    @GET("/item/:id")
+    public getItem(@pathParam("storeId") storeId: string, @pathParam("id") id: string) {
+      // this endpoint will only be available at v2.0/store/:storeId/item/:itemId
+    }
+
+    @GET("/item/:id", { versions: ["v1.0"]})
+    public getItem(@pathParam("storeId") storeId: string, @pathParam("id") id: string, @queryParam("type") type: string) {
+      // this endpoint will only be available at v1.0/store/:storeId/item/:itemId
+    }
+
+    @GET("/item/:id/stockCount", { versions: [">=v1.0"]})
+    public getStockCount(@pathParam("storeId") storeId: string, @pathParam("id") id: string) {
+      // this endpoint will be available at both v1.0/store/:storeId/item/:itemId/stockCount
+      // and also v2.0/store/:storeId/item/:itemId/stockCount
+    }
+}
+```
+
+Where multiple methods with the same path and method satisfy a particular version, the first one will be used. Note that semver 
+comparisons will consider missing minor/patch versions as wildcards e.g. "v2" will be considered as "v2.x" and will satisfy both 
+"v2" and "v2.1", so you are encouraged to use same length identifiers for all versions e.g. "v2.0" and "v2.1".
 
 ---
 
