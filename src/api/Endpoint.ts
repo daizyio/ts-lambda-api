@@ -362,7 +362,7 @@ export class Endpoint {
         try {
           parameters = this.buildEndpointParameters(request, response, principal)
         } catch (ex) {
-          const errors = ex.reduce((list, error) => list.concat(Object.values(error.constraints)), []);
+          const errors = Array.isArray(ex) ? ex : [ex.message];
           this.log(LogLevel.error, "Errors occurred extracting parameters for method '%s' in controller '%s': %j",
                   this.endpointInfo.methodName,
                   controllerName,
