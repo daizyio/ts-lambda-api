@@ -8,7 +8,7 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
     public readonly source = "virtual"
     public readonly name = "body"
 
-    public constructor(private type?: new() => any, private options?: ValidatorOptions & { validate?: boolean } ) {
+    public constructor(private type?: new() => any, private options: ValidatorOptions & { validate?: boolean } = {} ) {
         super(BodyParameterExtractor)
     }
 
@@ -25,7 +25,7 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
 
           const obj = plainToClass(this.type, request.body);
 
-          if (this.options?.validate) {
+          if (this.options.validate ?? true) {
             this.options.forbidNonWhitelisted = this.options.forbidNonWhitelisted ?? true
             this.options.whitelist = this.options.whitelist ?? true
 
