@@ -26,7 +26,7 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
           const obj = plainToClass(this.type, request.body);
 
           if (this.options.validate ?? true) {
-            this.options.forbidNonWhitelisted = this.options.forbidNonWhitelisted ?? true
+            this.options.forbidNonWhitelisted = this.options.forbidNonWhitelisted ?? false
             this.options.whitelist = this.options.whitelist ?? true
 
             const errors = validateSync(obj, this.options)

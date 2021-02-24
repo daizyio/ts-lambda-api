@@ -10,7 +10,7 @@ class TypedRequest {
   @IsOptional() @IsString() name: string;
 
   public render() {
-    return `${this.id}/${this.name}`;
+    return JSON.stringify(this);
   }
 }
 
@@ -33,12 +33,12 @@ export class MethodTestsController extends Controller {
     }
 
     @POST("/post-validated")
-    public postValidated(@bodyTyped(TypedRequest, { validate: true }) request: TypedRequest) {
+    public postValidated(@bodyTyped(TypedRequest) request: TypedRequest) {
       return request.render();
     }
 
-    @POST("/post-validated-no-whitelist")
-    public postValidatedNoWhitelist(@bodyTyped(TypedRequest, { validate: true, forbidNonWhitelisted: false }) request: TypedRequest) {
+    @POST("/post-validated-forbid-whitelist")
+    public postValidatedNoWhitelist(@bodyTyped(TypedRequest, { forbidNonWhitelisted: true }) request: TypedRequest) {
       return request.render();
     }
 

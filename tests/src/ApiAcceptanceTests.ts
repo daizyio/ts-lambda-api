@@ -75,11 +75,14 @@ export class ApiAcceptanceTests extends TestBase {
 
         Expect(response.statusCode).toEqual(200)
 
-        Expect(response.body).toEqual("23/ezra")
+        Expect(JSON.parse(response.body)).toEqual({
+          id: 23,
+          name: "ezra"
+        })
     }
 
     @Test()
-    public async when_request_with_body_made_for_decorator_route_then_body_is_validated_and_returns_400_if_not_valid() {
+    public async when_request_with_body_made_for_decorator_route_then_body_is_validated_and_by_default_unknown_fields_are_stripped() {
         let requestBody = {
             id: 23,
             name: "ezra",
@@ -92,17 +95,16 @@ export class ApiAcceptanceTests extends TestBase {
                 .build()
         )
 
-        Expect(response.statusCode).toEqual(400)
+        Expect(response.statusCode).toEqual(200)
 
         Expect(JSON.parse(response.body)).toEqual({
-          errors: [
-            "property unknownField should not exist"
-          ]
+            id: 23,
+            name: "ezra"
         })
     }
 
     @Test()
-    public async when_request_with_body_made_for_decorator_route_and_forbidNonWhitelisted_is_false_then_body_is_validated_and_but_ignores_extra_props() {
+    public async when_request_with_body_made_for_decorator_route_and_forbidNonWhitelisted_is_true_then_body_is_validated_and_returns_400_if_unknown_fields() {
         let requestBody = {
             id: 23,
             name: "ezra",
@@ -110,14 +112,18 @@ export class ApiAcceptanceTests extends TestBase {
         }
 
         let response = await this.sendRequest(
-            RequestBuilder.do("POST", "/test/methods/post-validated-no-whitelist")
+            RequestBuilder.do("POST", "/test/methods/post-validated-forbid-whitelist")
                 .body(JSON.stringify(requestBody))
                 .build()
         )
 
-        Expect(response.statusCode).toEqual(200)
+        Expect(response.statusCode).toEqual(400)
 
-        Expect(response.body).toEqual("23/ezra")
+        Expect(JSON.parse(response.body)).toEqual({
+          errors: [
+            "property unknownField should not exist"
+          ]
+        })
     }
 
     @Test()
