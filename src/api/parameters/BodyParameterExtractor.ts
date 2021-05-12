@@ -27,7 +27,7 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
             if (!Array.isArray(request.body)) {
               throw new Error(`Request was passed array flag but body is not a valid array and cannot be converted to the array based requested type`)
             }
-            let errors: string[];
+            let errors: string[] = [];
             const objs = request.body.map((obj: any) => {
               try {
                 return this.transformValidate(obj)
