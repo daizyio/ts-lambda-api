@@ -8,7 +8,7 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
     public readonly source = "virtual"
     public readonly name = "body"
 
-    public constructor(private type?: new() => any, private options: ValidatorOptions & { validate?: boolean } = {} ) {
+    public constructor(private type?: new() => any, private options: ValidatorOptions & { validate?: boolean, array?: boolean } = {} ) {
         super(BodyParameterExtractor)
     }
 
@@ -23,20 +23,46 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
             throw new Error(`Request body is not a valid object and cannot be converted to the requested type`)
           }
 
-          const obj = plainToClass(this.type, request.body);
-
-          if (this.options.validate ?? true) {
-            this.options.forbidNonWhitelisted = this.options.forbidNonWhitelisted ?? false
-            this.options.whitelist = this.options.whitelist ?? true
-
-            const errors = validateSync(obj, this.options)
-
-            if (errors.length > 0) {
-              throw this.transformErrors(errors)
+          if (this.options.array) {
+            if (!Array.isArray(request.body)) {
+              throw new Error(`Request was passed array flag but body is not a valid array and cannot be converted to the array based requested type`)
             }
+            let errors: string[];
+            const objs = request.body.map((obj: any) => {
+              try {
+                return this.transformValidate(obj)
+              } catch (error) {
+                if (Array.isArray(error)) {
+                  errors = errors.concat(error)
+                } else {
+                  throw error
+                }
+              }
+            })
+            if (errors.length > 0) {
+              throw errors
+            }
+            return objs
+          } else {
+            return this.transformValidate(request.body)
           }
-          return obj
         }
+    }
+
+    private transformValidate(body: any): any {
+      const obj = plainToClass(this.type, body)
+
+      if (this.options.validate ?? true) {
+        this.options.forbidNonWhitelisted = this.options.forbidNonWhitelisted ?? false
+        this.options.whitelist = this.options.whitelist ?? true
+
+        const errors = validateSync(obj, this.options)
+
+        if (errors.length > 0) {
+          throw this.transformErrors(errors)
+        }
+      }
+      return obj
     }
 
     private transformErrors(errors: ValidationError[], parent?: string): string[] {
