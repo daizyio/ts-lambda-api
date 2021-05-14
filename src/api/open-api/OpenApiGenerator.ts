@@ -151,7 +151,7 @@ export class OpenApiGenerator {
         if (appConfig.version || version) {
             this.logger.trace("version: %s", version)
 
-            openApiBuilder.addVersion(appConfig.version || version)
+            openApiBuilder.addVersion(version || appConfig.version)
         }
 
         if (appConfig.base) {
