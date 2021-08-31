@@ -209,6 +209,16 @@ export class ApiAcceptanceTests extends TestBase {
         Expect(response.body).toEqual("Hey steve, you are 37")
     }
 
+    @TestCase("/test/path-test")
+    @Test()
+    public async when_request_made_with_uriencoded_path_param_then_app_decodes_it(path: string) {
+        let response = await this.sendRequest(
+            RequestBuilder.get(`${path}/dr%20zhivago/37`).build()
+        )
+
+        Expect(response.body).toEqual("Hey dr zhivago, you are 37")
+    }
+
     @TestCase("/test/query-test")
     @TestCase("/test/injected-query-test")
     @Test()

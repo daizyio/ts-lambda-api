@@ -13,7 +13,7 @@ export class PathParameterExtractor extends BaseParameterExtractor {
     public extract(request: Request) {
         this.logger.debug("Extracting path parameter '%s' from request", this.name)
 
-        let pathParamValue = request.params[this.name]
+        let pathParamValue = decodeURI(request.params[this.name]);
 
         this.logger.trace("Path parameter '%s' value: %s", this.name, pathParamValue)
 
