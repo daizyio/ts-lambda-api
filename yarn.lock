@@ -1099,10 +1099,10 @@ junit-report-builder@^2.0.0:
     make-dir "^1.3.0"
     xmlbuilder "^10.0.0"
 
-lambda-api@^0.11.0:
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/lambda-api/-/lambda-api-0.11.0.tgz#c2e87c96217c90fa837b9c73c85e020b0c7fa750"
-  integrity sha512-xeGRa2qglkYU1M9hw1rdlqHxIkMx+tjM9a43Va7f+92aBduJPu1bb9JXyewxXEKutT3cy8uslFhUmNiqA+h0Sg==
+lambda-api@^0.11.2:
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/lambda-api/-/lambda-api-0.11.2.tgz#32a27a95983100cc1d7a5dd2aaef6c0f9bc3960b"
+  integrity sha512-4LPthd9sg3RdeNul+vz7XDmjqR/RW+Mr+4w857IgVcdcl5UqDzZbK+fxB7dH7HYQoERIusXuzUU/bolZed+agw==
 
 libphonenumber-js@^1.9.7:
   version "1.9.8"
