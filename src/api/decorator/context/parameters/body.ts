@@ -24,3 +24,14 @@ export function bodyTyped(type: new() => any, validationOptions?: ValidatorOptio
   }
 }
 
+export function bodyArray(itemType: (new() => any) | 'string' | 'number' | 'boolean', validationOptions?: ValidatorOptions & { validate?: boolean }) {
+  const options: ValidatorOptions & { validate?: boolean, array?: boolean } = validationOptions || {}
+  options.array = true
+  return (classDefinition: Object | Function, methodName: string, paramIndex: number) => {
+    let controller = DecoratorRegistry.getOrCreateController(classDefinition.constructor)
+    let endpoint = DecoratorRegistry.getOrCreateEndpoint(controller, methodName)
+
+    endpoint.parameterExtractors[paramIndex] = new BodyParameterExtractor(itemType, options)
+  }
+}
+

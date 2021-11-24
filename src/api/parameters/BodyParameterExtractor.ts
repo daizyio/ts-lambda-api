@@ -1,6 +1,7 @@
 import { plainToClass } from 'class-transformer'
 import { validateSync, ValidationError, ValidatorOptions } from 'class-validator'
 import { Request } from "lambda-api"
+import { ArrayOfPrimitivesContainer } from '../../util/ArrayOfPrimitivesContainer'
 
 import { BaseParameterExtractor } from "./BaseParameterExtractor"
 
@@ -8,7 +9,7 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
     public readonly source = "virtual"
     public readonly name = "body"
 
-    public constructor(private type?: new() => any, private options: ValidatorOptions & { validate?: boolean, array?: boolean } = {} ) {
+    public constructor(private type?: (new() => any) | 'string' | 'number' | 'boolean', private options: ValidatorOptions & { validate?: boolean, array?: boolean } = {} ) {
         super(BodyParameterExtractor)
     }
 
@@ -27,22 +28,26 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
             if (!Array.isArray(request.body)) {
               throw new Error(`Request was passed array flag but body is not a valid array and cannot be converted to the array based requested type`)
             }
-            let errors: string[] = [];
-            const objs = request.body.map((obj: any) => {
-              try {
-                return this.transformValidate(obj)
-              } catch (error) {
-                if (Array.isArray(error)) {
-                  errors = errors.concat(error)
-                } else {
-                  throw error
+            if (typeof this.type === 'string') {
+              return this.transformValidate(request.body)
+            } else {
+              let errors: string[] = []
+              const objs = request.body.map((obj: any) => {
+                try {
+                  return this.transformValidate(obj)
+                } catch (error) {
+                  if (Array.isArray(error)) {
+                    errors = errors.concat(error)
+                  } else {
+                    throw error
+                  }
                 }
+              })
+              if (errors.length > 0) {
+                throw errors
               }
-            })
-            if (errors.length > 0) {
-              throw errors
+              return objs
             }
-            return objs
           } else {
             return this.transformValidate(request.body)
           }
@@ -50,7 +55,16 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
     }
 
     private transformValidate(body: any): any {
-      const obj = plainToClass(this.type, body)
+      let type = this.type
+      let primitives = false
+
+      if (typeof type === 'string') {
+        primitives = true
+        body = new ArrayOfPrimitivesContainer(body, type)
+        type = ArrayOfPrimitivesContainer
+      }
+
+      const obj = plainToClass(type as (new() => any), body)
 
       if (this.options.validate ?? true) {
         this.options.forbidNonWhitelisted = this.options.forbidNonWhitelisted ?? false
@@ -59,10 +73,14 @@ export class BodyParameterExtractor extends BaseParameterExtractor {
         const errors = validateSync(obj, this.options)
 
         if (errors.length > 0) {
-          throw this.transformErrors(errors)
+          const newErrors = this.transformErrors(errors)
+          throw !primitives ? newErrors :
+            newErrors.map(err => err.replace('arrayOfPrmitivesContainer_ArrayOfNumbers', 'array')
+                                    .replace('arrayOfPrmitivesContainer_ArrayOfStrings', 'array')
+                                    .replace('arrayOfPrmitivesContainer_ArrayOfBooleans', 'array'))
         }
       }
-      return obj
+      return !primitives ? obj : obj.getArray()
     }
 
     private transformErrors(errors: ValidationError[], parent?: string): string[] {
