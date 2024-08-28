@@ -1,4 +1,4 @@
-import { OpenApiBuilder } from "openapi3-ts"
+import { OpenApiBuilder } from "openapi3-ts/oas31"
 import {
     ContentObject,
     MediaTypeObject,
@@ -10,7 +10,7 @@ import {
     ResponseObject,
     SchemaObject,
     TagObject
-} from "openapi3-ts/dist/model"
+} from "openapi3-ts/dist/model/openapi31"
 import semver from "semver";
 
 import { MiddlewareRegistry } from "../MiddlewareRegistry"
@@ -26,7 +26,6 @@ import { toJson } from "../../util/jsonUtils"
 import { timed } from "../../util/timed"
 import { ILogger } from "../../util/logging/ILogger"
 import { LogFactory } from "../../util/logging/LogFactory"
-import { isNullOrUndefined } from 'util'
 
 export type OpenApiFormat = "json" | "yml"
 

@@ -1,6 +1,6 @@
 import { Expect, Setup, Test, TestCase, TestFixture } from "alsatian"
 import { load } from "js-yaml"
-import { OpenAPIObject, SecuritySchemeObject, PathItemObject, ParameterObject, ResponseObject, RequestBodyObject, OperationObject, MediaTypeObject, SchemaObject } from "openapi3-ts"
+import { OpenAPIObject, SecuritySchemeObject, PathItemObject, ParameterObject, ResponseObject, RequestBodyObject, OperationObject, MediaTypeObject, SchemaObject } from "openapi3-ts/oas31"
 
 import { RequestBuilder, ApiLambdaApp, LogLevel } from "../../dist/ts-lambda-api"
 

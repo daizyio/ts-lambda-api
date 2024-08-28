@@ -58,3 +58,6 @@ LICENSE
 !typedoc-default-themes/**/*
 !xunit-viewer/**/*
 !istanbul-reports/**/*
+!**/yaml/dist/**/doc
+!**/yaml/dist/**/docs
+
